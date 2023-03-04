@@ -64,20 +64,10 @@ def read_datasets(root="E:\\data\\wanfang\\"):
 
 
 def ArticleClassfier(train_feature_list, test_feature_list, train_class_list, test_class_list):
-    pass
-    # classifier = MultinomialNB().fit(train_feature_list, train_class_list)
-    # params = MultinomialNB().get_params(classifier, deep=True)
-    # pickle.dump(classifier, open("model.dat", "wb"))
-    # print("1=", params)
-    # test_accuracy = classifier.score(test_feature_list, test_class_list)
-
-    # print("2=\n", test_feature_list[0], "\n", type(test_feature_list[1200]))
-    # classifier = pickle.load(open("model.dat", "rb"))
-    #
-    # print(classifier.predict(test_feature_list[2000]))
-
-    # print(classifier2.predict(test_feature_list[0]))
-    # return test_accuracy
+    classifier = MultinomialNB().fit(train_feature_list, train_class_list)
+    pickle.dump(classifier, open("model2.dat", "wb"))  # 保存模型
+    test_accuracy = classifier.score(test_feature_list, test_class_list)
+    return test_accuracy
 
 
 def get_mask(y, train_ratio=0.6, test_ratio=0.2, device=None):
@@ -116,32 +106,50 @@ def get_mask(y, train_ratio=0.6, test_ratio=0.2, device=None):
     train_indexes = torch.LongTensor(flatten_np_list(train_indexes)).to(device)
     test_indexes = torch.LongTensor(flatten_np_list(test_indexes)).to(device)
     val_indexes = torch.LongTensor(flatten_np_list(val_indexes)).to(device)
-    # print(train_indexes, "====", train_indexes.numpy())
     return train_indexes.numpy(), test_indexes.numpy(), val_indexes.numpy()
 
 
 if __name__ == "__main__":
     start = time.time()
-    model_1 = pickle.load(open("model.dat", "rb"))
     feat, keyword_dict, num_keywords, labels, keywords = read_datasets()
+    np.save("Num_key_words", num_keywords)
+    print(type(keyword_dict))
+    kdict = str(keyword_dict)
+    f = open("keyword_dict.txt", "w", encoding='utf-8')
+    f.write(kdict)
+    f.close()
     train_indexes, test_indexes, val_indexes = get_mask(labels, 0.8, 0.1)
-    # print(feat[train_indexes])
-    # test_accuracy = ArticleClassfier(feat[train_indexes], feat[test_indexes], labels[train_indexes],
-    #                                  labels[test_indexes])
-    str1 = np.loadtxt("1.txt", encoding='utf-8', dtype=np.str, delimiter="\n")
-    str1 = str(str1)
-    str1 = json.loads(str1)
-    print(str1, "---", type(str1))
-    kw = str1['Keywords']
-    # print(type(kw))
-    la = str1['PeriodicalClassCode']
-    # print("keyword_dict",keyword_dict)
+    test_accuracy = ArticleClassfier(feat[train_indexes], feat[test_indexes], labels[train_indexes],
+                                     labels[test_indexes])
+    print(test_accuracy)
+    end = time.time()
+    print("run_time = ", end - start)
+
+'''
+    # 加载模型，然后进行数据测试
+    start = time.time()
+    model_1 = pickle.load(open("model2.dat", "rb"))
+    # 读取num_keywords
+    num_keywords = np.load('Num_key_words.npy')
+    # 读取key_dict，然后继续处理
+    with open('keyword_dict.txt', "r", encoding='utf-8') as f:
+        ky_dict = f.read()
+        # print(type(string_1))
+    data = ky_dict[27:-1]
+    keyword_dict = eval(data)
+    # ================
+    # 测试
+    test_data = np.loadtxt("1.txt", encoding='utf-8', dtype=np.str, delimiter="\n")
+    test_data = str(test_data)
+    test_data = json.loads(test_data)
+    kw = test_data['Keywords']
+    la = test_data['PeriodicalClassCode']
     feat1 = np.zeros(num_keywords, dtype=np.int32)
     for kes in kw:
         if kes in keyword_dict.keys():
             feat1[keyword_dict[kes]] = 1
     feat1 = feat1.reshape(1, -1)
-    print(model_1.predict(feat1))
     end = time.time()
-    print("runtime = ", end - start)
-    # print(test_accuracy)
+    print(model_1.predict(feat1))
+    print("run_time = ", end - start) 
+'''
