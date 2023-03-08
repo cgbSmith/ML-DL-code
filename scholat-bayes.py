@@ -1,11 +1,10 @@
 import json
 import os
 import random
-from  sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import MultinomialNB
 import time
-import matplotlib.pyplot as plt
 from ctypes import Array
-
+from tqdm import tqdm
 
 
 def TextProcess(folder_path, test_size):
@@ -15,7 +14,10 @@ def TextProcess(folder_path, test_size):
     class_list = []
     i = 1
     num = 0
-    for folder in folder_list:
+    # for folder in folder_list:
+    for t in tqdm((folder_list)):
+        print("t = ",t)
+        folder = t
         if i > 10:
             break
         i += 1
@@ -38,14 +40,14 @@ def TextProcess(folder_path, test_size):
                     # print(item.get("Keywords"))
                     # classCode = item.get("OriginalClassCode")
                     classCode = item.get("PeriodicalClassCode")
-                    Title=item.get("Title")
+                    Title = item.get("Title")
                     # classCode = item.get("MachinedClassCode")
                     keyWords = item.get("Keywords")
 
                     if classCode != None and keyWords != None:
                         data_list.append(keyWords)
                         class_list.append(classCode[0])
-                        print(classCode[0],"-----",keyWords,"==============",Title)
+                        # print(classCode[0], "-----", keyWords, "==============", Title)
                         num += 1
 
     data_class_list = list(zip(data_list, class_list))  # zip压缩，将数据和标签对应压缩
@@ -78,38 +80,42 @@ def TextProcess(folder_path, test_size):
     # print(all_words_list)
     print("共有数据", num, "条")
     # print(train_data_list)
-    return all_words_list,train_data_list,test_data_list,train_class_list,test_class_list
+    return all_words_list, train_data_list, test_data_list, train_class_list, test_class_list
+
 
 def words_dict(all_words_list):
     feature_words = []
     for t in range(len(all_words_list)):
-        if not all_words_list[t].isdigit() and 1 < len(all_words_list[t])<10:
+        if not all_words_list[t].isdigit() and 1 < len(all_words_list[t]) < 10:
             feature_words.append(all_words_list[t])
     return feature_words
 
-def TextFeatures(train_data_list,test_data_list,feature_words):
-    def text_features(text,feature_words):
-        text_words=set(text)
-        features=[1 if word in text_words else 0 for word in feature_words]
+
+def TextFeatures(train_data_list, test_data_list, feature_words):
+    def text_features(text, feature_words):
+        text_words = set(text)
+        features = [1 if word in text_words else 0 for word in feature_words]
         return features
-    train_feature_list=[text_features(text,feature_words) for text in train_data_list]
-    test_feature_list=[text_features(text,feature_words) for text in test_data_list]
-    return train_feature_list,test_feature_list
+
+    train_feature_list = [text_features(text, feature_words) for text in train_data_list]
+    test_feature_list = [text_features(text, feature_words) for text in test_data_list]
+    return train_feature_list, test_feature_list
 
 
-def ArticleClassfier(train_feature_list,test_feature_list,train_class_list,test_class_list):
-    classifier = MultinomialNB().fit(train_feature_list,train_class_list)
-    test_accuracy = classifier.score(test_feature_list,test_class_list)
+def ArticleClassfier(train_feature_list, test_feature_list, train_class_list, test_class_list):
+    classifier = MultinomialNB().fit(train_feature_list, train_class_list)
+    test_accuracy = classifier.score(test_feature_list, test_class_list)
     return test_accuracy
 
+
 if __name__ == '__main__':
-    start_time=time.time()
+    start_time = time.time()
     folder_path = 'E:\data\wanfang'
-    all_words_list,train_data_list,test_data_list,train_class_list,test_class_list=TextProcess(folder_path, 0.1)
-    feature_words=words_dict(all_words_list)
-    train_feature_list,test_feature_list= TextFeatures(train_data_list,test_data_list,feature_words)
-    test_acc=ArticleClassfier(train_feature_list,test_feature_list,train_class_list,test_class_list)
-    end_time=time.time()
-    run_time=end_time-start_time
-    print("acc:=",test_acc)
-    print("runtime:=",run_time)
+    all_words_list, train_data_list, test_data_list, train_class_list, test_class_list = TextProcess(folder_path, 0.1)
+    feature_words = words_dict(all_words_list)
+    train_feature_list, test_feature_list = TextFeatures(train_data_list, test_data_list, feature_words)
+    test_acc = ArticleClassfier(train_feature_list, test_feature_list, train_class_list, test_class_list)
+    end_time = time.time()
+    run_time = end_time - start_time
+    print("acc:=", test_acc)
+    print("runtime:=", run_time)

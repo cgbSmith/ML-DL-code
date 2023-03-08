@@ -8,6 +8,7 @@ from sklearn.naive_bayes import MultinomialNB
 import pickle
 import time
 import torch
+from tqdm import tqdm
 
 
 def read_datasets(root="E:\\data\\wanfang\\"):
@@ -18,9 +19,11 @@ def read_datasets(root="E:\\data\\wanfang\\"):
     unique_label = []
     # folder_list = folder_list[:10]
     i = 0
-    for folder in folder_list:  # 获得所有文件夹
-        print(i, folder)
-        i += 1
+    # for folder in folder_list:  # 获得所有文件夹
+    for folder in tqdm((folder_list), leave=True, desc="read files:"):
+        # folder = t
+        # print(i, folder)
+        # i += 1
         files = os.listdir(root + folder)  # 获取所有文件
         adds = os.path.join(root, folder)
         for file in files:
