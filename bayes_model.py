@@ -16,7 +16,7 @@ def read_datasets(root="E:\\data\\wanfang\\"):
     key_words = []
     unique_key_word = []
     unique_label = []
-    folder_list = folder_list[:10]
+    # folder_list = folder_list[:10]
     i = 0
     for folder in folder_list:  # 获得所有文件夹
         print(i, folder)
@@ -65,7 +65,7 @@ def read_datasets(root="E:\\data\\wanfang\\"):
 
 def ArticleClassfier(train_feature_list, test_feature_list, train_class_list, test_class_list):
     classifier = MultinomialNB().fit(train_feature_list, train_class_list)
-    pickle.dump(classifier, open("model2.dat", "wb"))  # 保存模型
+    pickle.dump(classifier, open("model_all.dat", "wb"))  # 保存模型
     test_accuracy = classifier.score(test_feature_list, test_class_list)
     return test_accuracy
 
