@@ -19,6 +19,7 @@ def load_data(path="../data/cora/", dataset="cora"):
     idx_features_labels = np.genfromtxt("{}{}.content".format(path, dataset),
                                         dtype=np.dtype(str))
     features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
+    print(type(features))
     labels = encode_onehot(idx_features_labels[:, -1])
 
     # build graph
@@ -26,6 +27,9 @@ def load_data(path="../data/cora/", dataset="cora"):
     idx_map = {j: i for i, j in enumerate(idx)}
     edges_unordered = np.genfromtxt("{}{}.cites".format(path, dataset),
                                     dtype=np.int32)
+    # add to monitor
+    add_monitor = edges_unordered.flatten()
+    ### end add to monitor
     edges = np.array(list(map(idx_map.get, edges_unordered.flatten())),
                      dtype=np.int32).reshape(edges_unordered.shape)
     adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
