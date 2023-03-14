@@ -23,12 +23,14 @@ class GraphConvolution(Module):
         self.reset_parameters()
 
     def reset_parameters(self):
+        print('i go there')
         stdv = 1. / math.sqrt(self.weight.size(1))
         self.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, input, adj):
+        print('i go here')
         support = torch.mm(input, self.weight)
         output = torch.spmm(adj, support)
         if self.bias is not None:
