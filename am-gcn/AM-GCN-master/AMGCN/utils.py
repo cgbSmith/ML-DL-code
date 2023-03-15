@@ -18,13 +18,16 @@ def common_loss(emb1, emb2):
 
 
 def loss_dependence(emb1, emb2, dim):
-    R = torch.eye(dim).cuda() - (1/dim) * torch.ones(dim, dim).cuda()
-    K1 = torch.mm(emb1, emb1.t())
-    K2 = torch.mm(emb2, emb2.t())
-    RK1 = torch.mm(R, K1)
-    RK2 = torch.mm(R, K2)
-    HSIC = torch.trace(torch.mm(RK1, RK2))
-    return HSIC
+   if torch.cuda.is_available():
+      R = torch.eye(dim).cuda() - (1/dim) * torch.ones(dim, dim).cuda()
+   else:
+      R = torch.eye(dim) - (1 / dim) * torch.ones(dim, dim)
+   K1 = torch.mm(emb1, emb1.t())
+   K2 = torch.mm(emb2, emb2.t())
+   RK1 = torch.mm(R, K1)
+   RK2 = torch.mm(R, K2)
+   HSIC = torch.trace(torch.mm(RK1, RK2))
+   return HSIC
 
 
 

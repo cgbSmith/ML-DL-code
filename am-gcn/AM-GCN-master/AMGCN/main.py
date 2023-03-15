@@ -12,14 +12,15 @@ import os
 import torch.nn as nn
 import argparse
 from config import Config
-#AMGCN
+
+# AMGCN
 ###################
 
 if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = "2"
     parse = argparse.ArgumentParser()
     parse.add_argument("-d", "--dataset", help="dataset", type=str, required=True)
-    parse.add_argument("-l", "--labelrate", help="labeled data for train per class", type = int, required = True)
+    parse.add_argument("-l", "--labelrate", help="labeled data for train per class", type=int, required=True)
     args = parse.parse_args()
     config_file = "./config/" + str(args.labelrate) + str(args.dataset) + ".ini"
     config = Config(config_file)
@@ -33,16 +34,15 @@ if __name__ == "__main__":
         if cuda:
             torch.cuda.manual_seed(config.seed)
 
-   
     sadj, fadj = load_graph(args.labelrate, config)
     features, labels, idx_train, idx_test = load_data(config)
-    
-    model = SFGCN(nfeat = config.fdim,
-              nhid1 = config.nhid1,
-              nhid2 = config.nhid2,
-              nclass = config.class_num,
-              n = config.n,
-              dropout = config.dropout)
+
+    model = SFGCN(nfeat=config.fdim,
+                  nhid1=config.nhid1,
+                  nhid2=config.nhid2,
+                  nclass=config.class_num,
+                  n=config.n,
+                  dropout=config.dropout)
     if cuda:
         model.cuda()
         features = features.cuda()
@@ -53,13 +53,14 @@ if __name__ == "__main__":
         idx_test = idx_test.cuda()
     optimizer = optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
 
+
     def train(model, epochs):
         model.train()
         optimizer.zero_grad()
-        output, att, emb1, com1, com2, emb2, emb= model(features, sadj, fadj)
-        loss_class =  F.nll_loss(output[idx_train], labels[idx_train])
-        loss_dep = (loss_dependence(emb1, com1, config.n) + loss_dependence(emb2, com2, config.n))/2
-        loss_com = common_loss(com1,com2)
+        output, att, emb1, com1, com2, emb2, emb = model(features, sadj, fadj)
+        loss_class = F.nll_loss(output[idx_train], labels[idx_train])
+        loss_dep = (loss_dependence(emb1, com1, config.n) + loss_dependence(emb2, com2, config.n)) / 2
+        loss_com = common_loss(com1, com2)
         loss = loss_class + config.beta * loss_dep + config.theta * loss_com
         acc = accuracy(output[idx_train], labels[idx_train])
         loss.backward()
@@ -72,6 +73,7 @@ if __name__ == "__main__":
               'f1te:{:.4f}'.format(macro_f1.item()))
         return loss.item(), acc_test.item(), macro_f1.item(), emb_test
 
+
     def main_test(model):
         model.eval()
         output, att, emb1, com1, com2, emb2, emb = model(features, sadj, fadj)
@@ -82,7 +84,8 @@ if __name__ == "__main__":
         labelcpu = labels[idx_test].data.cpu()
         macro_f1 = f1_score(labelcpu, label_max, average='macro')
         return acc_test, macro_f1, emb
-    
+
+
     acc_max = 0
     f1_max = 0
     epoch_max = 0
@@ -95,7 +98,3 @@ if __name__ == "__main__":
     print('epoch:{}'.format(epoch_max),
           'acc_max: {:.4f}'.format(acc_max),
           'f1_max: {:.4f}'.format(f1_max))
-
-
-    
-    
