@@ -31,6 +31,7 @@ class GraphConvolution(Module):
 
     def forward(self, input, adj):
         print('i go here')
+        #touch.mm代表就是数学意思上的矩阵乘法
         support = torch.mm(input, self.weight)
         output = torch.spmm(adj, support)
         if self.bias is not None:

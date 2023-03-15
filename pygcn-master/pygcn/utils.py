@@ -23,6 +23,7 @@ def load_data(path="../data/cora/", dataset="cora"):
                                         dtype=np.dtype(str))
     #取二维数组的每一行，每一行切片保留[1:-1]的内容，即提取整个二维数组的第1列至倒数第二列。（第0列为编号，最后一列为分类名，这里只提取特征属性0、1）
     f_test =idx_features_labels[:, 1:-1]
+    #将features矩阵转为稀疏矩阵
     features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
     #提取二位数组最后一列，即分类名，经过onehot处理后，lables变为，每行都只有一个一，其他全为0的矩阵
     labels = encode_onehot(idx_features_labels[:, -1])
@@ -39,7 +40,7 @@ def load_data(path="../data/cora/", dataset="cora"):
     #将edges_unordered数据展成一行
     add_monitor = edges_unordered.flatten()
     ### end add to monitor
-    #将便的关系用之前节点的编号表示，比如一条边需要用35，1033表示，那么这里就是用35和1033对应的编号进行表示
+    #将边的关系用之前节点的编号表示，比如一条边需要用35，1033表示，那么这里就是用35和1033对应的编号进行表示
     edges = np.array(list(map(idx_map.get, edges_unordered.flatten())),
                      dtype=np.int32).reshape(edges_unordered.shape)
     #这里用于创建邻接数组，edges.shape[0]表示有多少条边，那么对应的邻接数组中就有多少个1，，因此用np.ones(edges.shape[0]来创建对应数目的全是1的数组)
@@ -60,9 +61,11 @@ def load_data(path="../data/cora/", dataset="cora"):
     idx_val = range(200, 500)
     idx_test = range(500, 1500)
 
+
     features = torch.FloatTensor(np.array(features.todense()))
     #np.where返回二维数组中不为0元素所在的行数组和列数组
     #np.where()[0]返回行数组,np.where()[1]返回列数组
+    #这里的labels就是表示有多少该节点对应的分类的编号，一共有6
     labels = torch.LongTensor(np.where(labels)[1])
     adj = sparse_mx_to_torch_sparse_tensor(adj)
 
@@ -101,9 +104,18 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     # np.vstack:按垂直方向（行顺序）堆叠数组构成一个新的数组
     # 这一句是提取稀疏矩阵的非零元素的索引。得到的矩阵是一个[2, 8137]的tensor。
     # 其中第一行是行索引，第二行是列索引。每一列的两个值对应一个非零元素的坐标。
+    #indices为coo矩阵的索引
     indices = torch.from_numpy(
         np.vstack((sparse_mx.row, sparse_mx.col)).astype(np.int64))
     #规定数值和shape
+    #values为coo矩阵的值
     values = torch.from_numpy(sparse_mx.data)
+    #shape为coo矩阵的形状大小
     shape = torch.Size(sparse_mx.shape)
+    print(shape)
     return torch.sparse.FloatTensor(indices, values, shape)
+
+    ###sparse_mx_to_torch_sparse_tensor函数总结：
+    # 总的来说，这个函数先将csr_matrix矩阵转为coo_matrix矩阵，先后获取coo矩阵的中非零元素的行列索引号
+    # 然后获取coo矩阵中非零元素的值（邻接矩阵经过归一化，基本都是小数），之后在获取coo矩阵的形状
+    # 然后通过toch.sparse.FloatTensor函数通过行列索引和值和形状，然后做出tensor类型的稀疏矩阵
