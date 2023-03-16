@@ -18,23 +18,38 @@ from config import Config
 
 if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+    # 创建解释器
     parse = argparse.ArgumentParser()
-    parse.add_argument("-d", "--dataset", help="dataset", type=str, required=True)
-    parse.add_argument("-l", "--labelrate", help="labeled data for train per class", type=int, required=True)
+    # 给解释器加上参数
+    parse.add_argument("-d", "--dataset", help="dataset", type=str, default="citeseer")
+    parse.add_argument("-l", "--labelrate", help="labeled data for train per class", type=int, default=20)
+    # 解释器进行解析并且将参数赋给解析出来的实体，方便调用
     args = parse.parse_args()
     config_file = "./config/" + str(args.labelrate) + str(args.dataset) + ".ini"
+    # 读取参数文件并且配置参数
     config = Config(config_file)
 
     cuda = not config.no_cuda and torch.cuda.is_available()
 
     use_seed = not config.no_seed
+    # 使用随机数种子，系统每次生成的随机数相同
+    # 不使用随机数种子，系统每次会采用当前时间值作为种子，每次生成的随机数不同
+    # 需要注意的是，每次生成随机数都需要先设置一次随机数种子，才能使得随机数相同
+    #例如，我设置了随机种子，random.seed(参数),那么接下来我的随机数为1，3，123，3123
+    #当我给相同的参数作为种子的时候，得到的随机也为1,3,123,3123
+
     if use_seed:
+        # 用于生成指定随机数
         np.random.seed(config.seed)
+        # 生成cuda随机数种子，方便下次实验结果复现
         torch.manual_seed(config.seed)
         if cuda:
             torch.cuda.manual_seed(config.seed)
 
+    #以acm为例子
+    # fadj为特征图矩阵（3025，3025），sadj为结构图矩阵（3025，3025）
     sadj, fadj = load_graph(args.labelrate, config)
+    # features为特征向量（3025，1870），labels为标签向量（3025，1）
     features, labels, idx_train, idx_test = load_data(config)
 
     model = SFGCN(nfeat=config.fdim,

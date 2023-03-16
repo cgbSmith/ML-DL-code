@@ -45,12 +45,14 @@ class SFGCN(nn.Module):
 
         self.dropout = dropout
         self.a = nn.Parameter(torch.zeros(size=(nhid2, 1)))
+        #使用均匀分布，将值填入张量
         nn.init.xavier_uniform_(self.a.data, gain=1.414)
         self.attention = Attention(nhid2)
         self.tanh = nn.Tanh()
 
         self.MLP = nn.Sequential(
             nn.Linear(nhid2, nclass),
+            #dim=1，表示按列进行计算
             nn.LogSoftmax(dim=1)
         )
 

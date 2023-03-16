@@ -24,6 +24,7 @@ class GraphConvolution(Module):
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
+        # uniform() 方法将随机生成下一个实数，它在 [x, y] 范围内
         self.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
