@@ -37,12 +37,8 @@ def read_datasets(root="E:\\data\\wf_merge\\"):
                     continue
                 labels.append(label)
                 key_words.append(key_word)
-                # unique_key_word = unique_key_word + key_word
-                # unique_label = unique_label + label
-                for key in key_word:
-                    unique_key_word.append(key)
-                for l in label:
-                    unique_label.append(l)
+                unique_key_word = unique_key_word + key_word
+                unique_label = unique_label + label
 
         except:
             continue
