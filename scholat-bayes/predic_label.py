@@ -9,7 +9,8 @@ from collections import defaultdict
 if __name__ == '__main__':
     # 加载模型，然后进行数据测试
     start = time.time()
-    model_1 = pickle.load(open("model2.dat", "rb"))
+    model_1 = pickle.load(open("../model_all.dat", "rb"))
+
     # 读取num_keywords
     num_keywords = np.load('Num_key_words.npy')
     # 读取key_dict，然后继续处理

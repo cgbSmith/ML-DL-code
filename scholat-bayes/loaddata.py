@@ -1,10 +1,16 @@
 import json
 import os
+import pickle
+
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import json
 import re
+import scipy.sparse as sp
+from collections import defaultdict
+import gc
+from itertools import chain #用来将嵌套列表转为一维数组
 
 
 def load_data():
@@ -118,6 +124,7 @@ def readfile():
         except:
             pass
 
+
 def mergeFile():
     mergefile_one = "E:\\data\\wf_merge\\one.txt"
     mergefile_two = "E:\\data\\wf_merge\\two.txt"
@@ -125,34 +132,34 @@ def mergeFile():
     filenames = os.listdir(originfile)
     one_file = filenames[:2000]
     two_file = filenames[2000:]
-    file_one = open(mergefile_one,'w',encoding='utf-8')
-    one = ["{}{}".format("E:\\data\\wf_dic\\",a) for a in one_file]
-    two = ["{}{}".format("E:\\data\\wf_dic\\",a) for a in two_file]
-    for file in tqdm(one,leave=True,desc="merge files one"):
-        for line in open(file,encoding='utf-8'):
+    file_one = open(mergefile_one, 'w', encoding='utf-8')
+    one = ["{}{}".format("E:\\data\\wf_dic\\", a) for a in one_file]
+    two = ["{}{}".format("E:\\data\\wf_dic\\", a) for a in two_file]
+    for file in tqdm(one, leave=True, desc="merge files one"):
+        for line in open(file, encoding='utf-8'):
             file_one.writelines(line)
     file_one.close()
-    file_two = open(mergefile_two,'w',encoding='utf-8')
-    for file in tqdm(two,leave=True,desc="merge files one"):
-        for line in open(file,encoding='utf-8'):
+    file_two = open(mergefile_two, 'w', encoding='utf-8')
+    for file in tqdm(two, leave=True, desc="merge files one"):
+        for line in open(file, encoding='utf-8'):
             file_two.writelines(line)
     file_two.close()
 
 
-
 def readline():
     mergefile_one = "E:\\data\\wf_merge\\one.txt"
-    i =0
-    for line in tqdm(open(mergefile_one,encoding='utf-8'),leave=False,desc="read"):
+    i = 0
+    for line in tqdm(open(mergefile_one, encoding='utf-8'), leave=False, desc="read"):
         try:
             data = str(line)
-            data  =  data.replace('\'','\"')
+            data = data.replace('\'', '\"')
             data = json.loads(data)
-            print(data['Keywords'],'===',data['PeriodicalClassCode'])
-            i+=1
+            print(data['Keywords'], '===', data['PeriodicalClassCode'])
+            i += 1
         except:
             continue
     print(i)
+
 
 def getline():
     labels = []
@@ -162,7 +169,7 @@ def getline():
     mergefile_one = "E:\\data\\wf_merge\\two.txt"
     fname = "E:\\data\\wf_merge\\3.txt"
     # f= open(fname,'w',encoding='utf-8')
-    for line in tqdm(open(mergefile_one,encoding='utf-8'),leave=True,desc="choosing.."):
+    for line in tqdm(open(mergefile_one, encoding='utf-8'), leave=True, desc="choosing.."):
         # f.writelines(line)
         try:
             data = str(line)
@@ -170,7 +177,7 @@ def getline():
             paper_data = json.loads(data)
             key_word = paper_data['Keywords']
             label = paper_data['PeriodicalClassCode']
-    # f.close()
+        # f.close()
         except:
             continue
         labels.append(label)
@@ -180,6 +187,122 @@ def getline():
             unique_key_word.append(key)
 
 
+def readtxt():
+    file = '../uni.txt'
+    arr = np.unique(np.array(["好的", "不知道"]))
+    pickle.dump(arr, open(file, 'wb'))  # 存储numpy格式数据
+    print("====")
+    # with open(file, 'rb') as f2:
+    #     b = pickle.load(f2)#读取numpy格式诗句
+    #     print(b)
+    # with open('../unique_key_word1.txt', 'rb') as f:
+    #     b = pickle.load(f)
+    #     # b = list(b)
+    #     print(b)
+    with open('../unique_key_word2.txt', 'rb') as ff:
+        c = pickle.load(ff)
+        c = list(c)
+    with open('../unique_key_word1.txt', 'rb') as f1:
+        u1 = pickle.load(f1)
+    with open('./unique_key_word2.txt', 'rb') as f2:
+        u2 = pickle.load(f2)
+    with open('./unique_key_word3.txt', 'rb') as f3:
+        u3 = pickle.load(f3)
+    with open('./unique_key_word4.txt', 'rb') as f4:
+        u4 = pickle.load(f4)
+
+
+def testSparse():
+    feat = sp.csc_matrix((10, 20))
+    kd = defaultdict(int)
+    kd['你好'] = 1
+    kd['背景'] = 2
+    kd['广州'] = 3
+    key_words = [['你好', '广州', '背景']]
+    for i, keys in enumerate(key_words):
+        # print(type([kd[kes] for kes in keys]))
+        # feat[i,[kd[kes] for kes in keys]] = 1
+        lp = []
+        for kes in keys:
+            lp.append(kd[kes])
+        print(lp, "here")
+        print(type([kd[kes] for kes in keys]), [kd[kes] for kes in keys])
+        # feat[i, [kd[kes] for kes in keys]] = 1
+        feat[i, lp] = 1
+        print("1111")
+
+
+def testEnumber():
+    # with open('./unique_key_word1.txt', 'rb') as f1:
+    #     u1 = pickle.load(f1)
+    with open('../unique_key_word2.txt', 'rb') as f2:
+        u2 = pickle.load(f2)
+    # with open('../unique_key_word3.txt', 'rb') as f3:
+    #     u3 = pickle.load(f3)
+    # with open('./unique_key_word4.txt', 'rb') as f4:
+    #     u4 = pickle.load(f4)
+    # unique_key_word = np.unique(np.append(u2, u3))
+    unique_key_word = u2
+    with open('../key_words.txt', 'rb') as t3:
+        key_words = pickle.load(t3)
+    num_keywords = len(unique_key_word)
+    # feat1 = sp.csc_matrix((len(key_words), num_keywords))
+    feat = sp.coo_matrix((len(key_words), num_keywords), dtype=np.int64)
+    print(len(key_words))
+    keyword_dict = defaultdict(int)
+    for i, key in tqdm(enumerate(unique_key_word), desc="keydicting...."):
+        keyword_dict[key] = i
+    del unique_key_word, u2
+    gc.collect()
+    tcol = []
+    tdata = []
+    trow = []
+    print(len(key_words))
+    j = 0
+    for i, keys in tqdm(enumerate(key_words), leave=True, desc="reflexing1.."):
+        j += 1
+        if (j > 100000):
+            break
+        # feat[i, [keyword_dict[kes] for kes in keys]] = 1
+        ttemp = []
+        for kes in keys:
+            temp = keyword_dict[kes]
+            ttemp.append(temp)
+        tcol.append(ttemp)  # 列添加
+    na = list(chain(*tcol))
+    feat.col = np.array(na)
+    del tcol, keyword_dict, f2, na
+    gc.collect()
+    j = 0
+    for i, keys in tqdm(enumerate(key_words), leave=True, desc="reflexing2.."):
+        j += 1
+        if (j > 100000):
+            break
+        num = len(keys)
+        a = np.ones(num) * i
+        trow.append(a)  # 行添加
+    na = list(chain(*trow))
+    feat.row = np.array(na)
+    del trow, na
+    gc.collect()
+    j = 0
+    for i, keys in tqdm(enumerate(key_words), leave=True, desc="reflexing3.."):
+        j += 1
+        if (j > 100000):
+            break
+        num = len(keys)
+        tdata.append((list(np.ones(num))))  # 数据添加
+    na = list(chain(*tdata))
+    feat.data = np.array(na)
+    del tdata, key_words, na
+    gc.collect()
+    print("over")
+    feat2 = feat.astype(dtype=np.int64).tocsc()
+    print("transover")
+
+def readmodel():
+    pass
+
 if __name__ == '__main__':
     # load_data() #处理文件夹，生成txt
     # del_empty_file() #把空txt处理掉
@@ -188,4 +311,7 @@ if __name__ == '__main__':
     # readfile()
     # mergeFile()
     # readline()
-    getline()
+    # getline()
+    # readtxt()
+    # testSparse()
+    testEnumber()
